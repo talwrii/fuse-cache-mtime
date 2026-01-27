@@ -251,14 +251,21 @@ def main():
     import argparse
     import tempfile
     import atexit
-    
+
     parser = argparse.ArgumentParser(description='FUSE filesystem with mtime-based caching')
     parser.add_argument('source', help='Source directory (e.g., sshfs mount)')
     parser.add_argument('mountpoint', help='Where to mount the cached filesystem')
     parser.add_argument('--cache-dir', default=None,
                         help='Directory to store cached files (default: auto-created temp dir)')
+    parser.add_argument('-o', dest='mount_options', default=None,
+                        help='Mount options (accepted for fstab compatibility, mostly ignored)')
     args = parser.parse_args()
-    
+
+    # Strip fuse-cache-mtime# prefix if present (from fstab)
+    source = args.source
+    if source.startswith('fuse-cache-mtime#'):
+        source = source[len('fuse-cache-mtime#'):]
+
     # create temp dir if not specified
     if args.cache_dir is None:
         args.cache_dir = tempfile.mkdtemp(prefix='fuse-cache-mtime-')
@@ -266,11 +273,11 @@ def main():
         def cleanup():
             shutil.rmtree(args.cache_dir, ignore_errors=True)
         atexit.register(cleanup)
-    
-    print(f"Mounting {args.source} -> {args.mountpoint} (cache: {args.cache_dir})")
-    
+
+    print(f"Mounting {source} -> {args.mountpoint} (cache: {args.cache_dir})")
+
     fuse = FUSE(
-        FuseCacheMtime(args.source, args.cache_dir),
+        FuseCacheMtime(source, args.cache_dir),
         args.mountpoint,
         foreground=True,
         allow_other=False,
