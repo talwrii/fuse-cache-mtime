@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fuse-cache-mtime"
+version = "0.1.0"
+description = "FUSE filesystem with mtime-based caching for slow mounts like sshfs"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "fusepy>=3.0.1",
+]
+
+[project.scripts]
+fuse-cache-mtime = "fuse_cache_mtime.main:main"
