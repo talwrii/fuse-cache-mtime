@@ -267,10 +267,17 @@ def main():
         source = source[len('fuse-cache-mtime#'):]
 
     # Parse mount options
-    allow_other = False
+    fuse_options = {}
     if args.mount_options:
-        opts = args.mount_options.split(',')
-        allow_other = 'allow_other' in opts
+        for opt in args.mount_options.split(','):
+            if '=' in opt:
+                key, value = opt.split('=', 1)
+                if key == 'uid':
+                    fuse_options['uid'] = int(value)
+                elif key == 'gid':
+                    fuse_options['gid'] = int(value)
+            elif opt == 'allow_other':
+                fuse_options['allow_other'] = True
 
     # create temp dir if not specified
     if args.cache_dir is None:
@@ -286,8 +293,8 @@ def main():
         FuseCacheMtime(source, args.cache_dir),
         args.mountpoint,
         foreground=True,
-        allow_other=allow_other,
         nothreads=True,  # single-threaded reactor
+        **fuse_options
     )
 
 
