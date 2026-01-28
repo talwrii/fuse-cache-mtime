@@ -258,13 +258,19 @@ def main():
     parser.add_argument('--cache-dir', default=None,
                         help='Directory to store cached files (default: auto-created temp dir)')
     parser.add_argument('-o', dest='mount_options', default=None,
-                        help='Mount options (accepted for fstab compatibility, mostly ignored)')
+                        help='Mount options (accepted for fstab compatibility)')
     args = parser.parse_args()
 
     # Strip fuse-cache-mtime# prefix if present (from fstab)
     source = args.source
     if source.startswith('fuse-cache-mtime#'):
         source = source[len('fuse-cache-mtime#'):]
+
+    # Parse mount options
+    allow_other = False
+    if args.mount_options:
+        opts = args.mount_options.split(',')
+        allow_other = 'allow_other' in opts
 
     # create temp dir if not specified
     if args.cache_dir is None:
@@ -280,7 +286,7 @@ def main():
         FuseCacheMtime(source, args.cache_dir),
         args.mountpoint,
         foreground=True,
-        allow_other=False,
+        allow_other=allow_other,
         nothreads=True,  # single-threaded reactor
     )
 
